@@ -54,7 +54,7 @@ app.post("/unsub", async function(req,res){
 })
 
 app.all('/', async function (req, res) {
-    res.render('home', {site: site, site_id: siteID, tags: tags, pub: push.publicKey() })
+    res.render('home', {site: site, site_id: siteID, tags: tags,tagsj: tags.join(" "), pub: push.publicKey() })
 })
 
 var port = process.env.PORT || 8666;

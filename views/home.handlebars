@@ -153,6 +153,30 @@
     <p>Listening to {{{site}}} (ID {{{site_id}}})</p>
     <p>Tags: {{{tags}}}</p>
     <button class='js-push-button'>Enable Push Messages</button>
+    <hr/>
+    <a href="{{{site}}}/questions/tagged/{{{tagsj}}}?mode=any"  target="_blank">Search on site</a>
+    <hr/>
+    <h2> FAQ </h2>
+    <h3>What is this?</h3>
+    A very simple node app that listens to <a href="">Stack Exchange Web Sockets</a> and alerts you to new questions in selected tags.
+    <h3>These tags are not the ones I want!</h3>
+    Probably not. You can make your own copy of this site though. It's hosted on <a href="glitch.com">glitch.</a>. Just press the "remix" button below to make your own.
+    <h3>How can I customize it?</h3>
+    After remixing, edit <pre>.env</pre> with these values:
+    <pre>
+      TAGS="my,tags,comma,seperated"
+      # site (protocol and url, no trailing slash)
+      SITE="https://serverfault.com"
+      # site id from websocket connection (I get from chrome debugger network tab, or from "view source" on the site I want)
+      SITE_ID=2
+    </pre>
+    <h3>How do I update my remixed copy?</h3>
+    My source is <a href="https://github.com/captncraig/stackWatch">on github.</a> You should be able to "import from github" on glitch from "captncraig/stackWatch".
+    <hr/>
+    <a href="https://glitch.com/edit/#!/remix/astonishing-riddle" target="_blank">
+       <img src="https://cdn.gomix.com/2bdfb3f8-05ef-4035-a06e-2043962a3a13%2Fremix-button.svg" alt="Remix on Glitch" width="162">
+    </a>
+    <hr/>
 </body>
 
 </html>
