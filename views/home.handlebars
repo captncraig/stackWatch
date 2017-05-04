@@ -154,11 +154,14 @@
     <p>Tags: {{{tags}}}</p>
     <button class='js-push-button'>Enable Push Messages</button>
     <hr/>
-    <a href="{{{site}}}/questions/tagged/{{{tagsj}}}?mode=any"  target="_blank">Search on site</a>
+    <a href="{{{site}}}/questions/tagged/{{{tags}}}?mode=any"  target="_blank">Direct link to filtered search</a>
     <hr/>
     <h2> FAQ </h2>
     <h3>What is this?</h3>
     A very simple node app that listens to <a href="">Stack Exchange Web Sockets</a> and alerts you to new questions in selected tags.
+    <br/>
+    <br/>
+    See the code <a href="https://glitch.com/edit/#!/{{{project}}}">on glitch</a> or <a href="https://github.com/captncraig/stackWatch">github</a> 
     <h3>These tags are not the ones I want!</h3>
     Probably not. You can make your own copy of this site though. It's hosted on <a href="glitch.com">glitch.</a>. Just press the "remix" button below to make your own.
     <h3>How can I customize it?</h3>
@@ -178,5 +181,4 @@
     </a>
     <hr/>
 </body>
-
 </html>
