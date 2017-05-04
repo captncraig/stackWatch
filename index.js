@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var exphbs  = require('express-handlebars');
 var socks = require('./sockets')
 var fs = require('fs')
+var _ = require('lodash')
 
 var site = process.env.SITE || "http://stackoverflow.com"
 var siteID = process.env.SITE_ID || 1;
@@ -37,7 +38,17 @@ app.use(bodyParser.json());
 app.post("/sub", async function(req,res){
     if(req.body){
       pushList.push(req.body);
-      console.log(pushList);
+      console.log("SUB")
+      fs.writeFileSync(".data/pushes.json", JSON.stringify( pushList ), "utf8");
+    }
+    res.sendStatus(200)
+})
+
+app.post("/unsub", async function(req,res){
+    if(req.body){
+      console.log("UNSUB")
+      pushList = _.reject(pushList,function(p){return p.endpoint == req.body.endpoint});
+      fs.writeFileSync(".data/pushes.json", JSON.stringify( pushList ), "utf8");
     }
     res.sendStatus(200)
 })
@@ -54,7 +65,7 @@ app.listen(port, function () {
 function onMessage(data){
     data.link = site+"/"+data.url;
     console.log(data.link)
-    for (p of pushList){
+    for (let p of pushList){
         push.sendTo(p,data)
     }
 }

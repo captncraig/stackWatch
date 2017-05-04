@@ -137,7 +137,13 @@
             })
         }
         function removeSub(sub) {
-            $.post("/unsub", JSON.stringify(sub));
+            return fetch('/unsub', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(sub)
+            })
         }
     </script>
 </head>
