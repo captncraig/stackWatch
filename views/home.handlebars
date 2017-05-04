@@ -1,0 +1,152 @@
+<html>
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+        var pushButton;
+        var isPushEnabled;
+        window.addEventListener('load', function () {
+            pushButton = document.querySelector('.js-push-button');
+            pushButton.disabled = true;
+            pushButton.addEventListener('click', function () {
+                if (isPushEnabled) {
+                    unsubscribe();
+                } else {
+                    subscribe();
+                }
+            });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(initialiseState);
+            } else {
+                console.warn('Service workers aren\'t supported in this browser.');
+            }
+        });
+        function initialiseState() {
+            if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
+                console.warn('Notifications aren\'t supported.');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                console.warn('The user has blocked notifications.');
+                return;
+            }
+            if (!('PushManager' in window)) {
+                console.warn('Push messaging isn\'t supported.');
+                return;
+            }
+            navigator.serviceWorker.ready.then(function (registration) {
+                registration.pushManager.getSubscription()
+                    .then(function (subscription) {
+                        pushButton.disabled = false;
+                        if (!subscription) {
+                            console.log("NO SUB")
+                            return;
+                        }
+                        isPushEnabled = true;
+                        pushButton.textContent = 'Disable Push Messages';
+                        pushButton.disabled = false;
+                        console.log(subscription)
+                    })
+                    .catch(function (err) {
+                        console.warn('Error during getSubscription()', err);
+                    });
+            });
+        }
+        function subscribe() {
+            pushButton.disabled = true;
+
+            navigator.serviceWorker.ready.then(function (registration) {
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(
+                        '{{{pub}}}'
+                    )
+                };
+                registration.pushManager.subscribe(subscribeOptions)
+                    .then(function (subscription) {
+                        isPushEnabled = true;
+                        pushButton.textContent = 'Disable Push Messages';
+                        pushButton.disabled = false;
+                        addSub(subscription)
+                        return
+                    })
+                    .catch(function (e) {
+                        if (Notification.permission === 'denied') {
+                            console.warn('Permission for Notifications was denied');
+                            pushButton.disabled = true;
+                        } else {
+                            console.error('Unable to subscribe to push.', e);
+                            pushButton.disabled = false;
+                            pushButton.textContent = 'Enable Push Messages';
+                        }
+                    });
+            });
+        }
+        function unsubscribe() {
+            var pushButton = document.querySelector('.js-push-button');
+            pushButton.disabled = true;
+
+            navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
+                serviceWorkerRegistration.pushManager.getSubscription().then(
+                    function (pushSubscription) {
+                        if (!pushSubscription) {
+                            isPushEnabled = false;
+                            pushButton.disabled = false;
+                            pushButton.textContent = 'Enable Push Messages';
+                            return;
+                        }
+                        var subscriptionId = pushSubscription.subscriptionId;
+                        removeSub(pushSubscription)
+                        pushSubscription.unsubscribe().then(function (successful) {
+                            pushButton.disabled = false;
+                            pushButton.textContent = 'Enable Push Messages';
+                            isPushEnabled = false;
+                        }).catch(function (e) {
+                            removeSub(pushSubscription)
+                            console.log('Unsubscription error: ', e);
+                            pushButton.disabled = false;
+                            pushButton.textContent = 'Enable Push Messages';
+                        });
+                    }).catch(function (e) {
+                        console.error('Error thrown while unsubscribing from push messaging.', e);
+                    });
+            });
+        }
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+        function addSub(sub) {
+            return fetch('/sub', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(sub)
+            })
+        }
+        function removeSub(sub) {
+            $.post("/unsub", JSON.stringify(sub));
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Stack Watcher</h1>
+    <p>Listening to {{{site}}} (ID {{{site_id}}})</p>
+    <p>Tags: {{{tags}}}</p>
+    <button class='js-push-button'>Enable Push Messages</button>
+</body>
+
+</html>
