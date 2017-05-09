@@ -39,7 +39,7 @@ app.use('/', express.static('client'))
 app.use(bodyParser.json());
 
 app.use(function ensureSec(req, res, next){
-    if (req.headers["x-forwarded-proto"] === "https" || !req.secure){
+    if (req.headers["x-forwarded-proto"].startsWith("https")){
        return next();
     }
     res.redirect("https://" + req.headers.host + req.url);  
