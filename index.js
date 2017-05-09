@@ -65,8 +65,10 @@ app.post("/unsub", async function(req,res){
     res.sendStatus(200)
 })
 
+var tagsURL = _.map(tags, function(t){return encodeURIComponent(t);}).join("+or+")
+
 app.all('/', async function (req, res) {
-    res.render('home', {site: site, site_id: siteID, tags: tags.join(" "),tagsURL:encodeURIComponent(tags.join(" ")), pub: push.publicKey(), project: process.env.PROJECT_NAME  })
+    res.render('home', {site: site, site_id: siteID, tags: tags.join(" "),tagsURL:tagsURL, pub: push.publicKey(), project: process.env.PROJECT_NAME  })
 })
 
 
