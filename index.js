@@ -24,8 +24,11 @@ try{
 fs.writeFileSync(".data/pushes.json", "[]", { flag: 'wx' });
 }catch(err){}
 
+var client = require('prom-client');
+var numPushes = new client.Gauge('stackWatch_subs', 'Number of push subscriptions registered');
+
 var pushList = require("./.data/pushes.json")
-console.log(pushList)
+numPushes.set(pushList.length)
 
 var app = express()
 
@@ -35,9 +38,11 @@ app.set('view engine', 'handlebars');
 app.use('/', express.static('client'))
 app.use(bodyParser.json());
 
+
 app.post("/sub", async function(req,res){
     if(req.body){
       pushList.push(req.body);
+      numPushes.set(pushList.length)
       console.log("SUB")
       fs.writeFileSync(".data/pushes.json", JSON.stringify( pushList ), "utf8");
     }
@@ -48,6 +53,7 @@ app.post("/unsub", async function(req,res){
     if(req.body){
       console.log("UNSUB")
       pushList = _.reject(pushList,function(p){return p.endpoint == req.body.endpoint});
+      numPushes.set(pushList.length)
       fs.writeFileSync(".data/pushes.json", JSON.stringify( pushList ), "utf8");
     }
     res.sendStatus(200)
@@ -57,15 +63,39 @@ app.all('/', async function (req, res) {
     res.render('home', {site: site, site_id: siteID, tags: tags.join(" "), pub: push.publicKey(), project: process.env.PROJECT_NAME  })
 })
 
+
+app.get('/metrics', async function (req, res) {
+    res.send(client.register.metrics());
+})
+
 var port = process.env.PORT || 8666;
 app.listen(port, function () {
      console.log(`Example app listening on port ${port}!`)
 })
 
+
+var wsMsgs = new client.Counter('stackWatch_websocket_messages','Number of messages received via websockers' );
 function onMessage(data){
+    wsMsgs.inc()
     data.link = site+"/"+data.url;
     console.log(data.link)
     for (let p of pushList){
         push.sendTo(p,data)
     }
 }
+
+var request = require('request')
+function makeCall() {
+    request("https://"+process.env.PROJECT_NAME+".glitch.me/", function(err, data) {
+        if (err) {
+           console.log("PING ERR", err)
+        } else {
+           console.log("PING")
+           
+        }
+      setTimeout(makeCall, 50 * 1000);
+    });
+}
+
+makeCall()
+
