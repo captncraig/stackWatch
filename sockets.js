@@ -1,6 +1,10 @@
 const WebSocket = require('ws');
 const cheerio = require('cheerio')
 
+var client = require('prom-client');
+
+var wsErrors = new client.Counter('stackWatch_websocket_errors','Number of errors from websockets' );
+var wsConnect = new client.Histogram('stackWatch_websocket_connect_time', 'Time taken to connect to websocket server');
 var siteID, tags, callback;
 exports.start = function (sid, t, cb) {
     siteID = sid;
@@ -12,16 +16,19 @@ exports.start = function (sid, t, cb) {
 const reconnectInterval = 3000;
 var ws;
 var connect = function () {
+    var end = wsConnect.startTimer();
     ws = new WebSocket('wss://qa.sockets.stackexchange.com');
     ws.on('open', function () {
+        end();
         console.log('socket open');
-        for (tag of tags) {
+        for (var tag of tags) {
             var msg = `${siteID}-newnav-compact-questions-newest-tag-${tag}`
             console.log(msg);
             ws.send(msg)
         }
     });
     ws.on('error', function (err) {
+        wsErrors.inc()
         console.log('socket error', err);
     });
     ws.on('close', function (err) {

@@ -1,5 +1,9 @@
 const webpush = require('web-push');
 const fs = require('fs');
+var client = require('prom-client');
+
+var pushes = new client.Counter('stackWatch_pushes_sent','Number of successful push sends' );
+var pushErrs = new client.Counter('stackWatch_push_errors','Number of failed push sends' );
 
 var vapidKeys;
 function loadKeys() {
@@ -26,10 +30,13 @@ exports.init = function () {
     );
 }
 
-exports.sendTo = function (sub,data) {
-    console.log("sending")
-    webpush.sendNotification(sub, JSON.stringify(data))
-    console.log("done")
+exports.sendTo = async function (sub,data) {
+    try{
+      await webpush.sendNotification(sub, JSON.stringify(data))
+      pushes.inc()
+    }catch (e){
+      pushErrs.inc()
+    }
 }
 
 exports.publicKey = function(){
