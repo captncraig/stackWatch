@@ -38,6 +38,12 @@ app.set('view engine', 'handlebars');
 app.use('/', express.static('client'))
 app.use(bodyParser.json());
 
+app.use(function ensureSec(req, res, next){
+    if (req.headers["x-forwarded-proto"] === "https" || !req.secure){
+       return next();
+    }
+    res.redirect("https://" + req.headers.host + req.url);  
+});
 
 app.post("/sub", async function(req,res){
     if(req.body){
@@ -60,7 +66,7 @@ app.post("/unsub", async function(req,res){
 })
 
 app.all('/', async function (req, res) {
-    res.render('home', {site: site, site_id: siteID, tags: tags.join(" "), pub: push.publicKey(), project: process.env.PROJECT_NAME  })
+    res.render('home', {site: site, site_id: siteID, tags: tags.join(" "),tagsURL:encodeURIComponent(tags.join(" ")), pub: push.publicKey(), project: process.env.PROJECT_NAME  })
 })
 
 
@@ -89,9 +95,6 @@ function makeCall() {
     request("https://"+process.env.PROJECT_NAME+".glitch.me/", function(err, data) {
         if (err) {
            console.log("PING ERR", err)
-        } else {
-           console.log("PING")
-           
         }
       setTimeout(makeCall, 50 * 1000);
     });
