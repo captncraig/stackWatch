@@ -32,7 +32,7 @@ exports.init = function () {
 
 exports.sendTo = async function (sub,data) {
     try{
-      await webpush.sendNotification(sub, JSON.stringify(data))
+      await webpush.sendNotification(sub, JSON.stringify(data), {TTL:3600})
       pushes.inc()
     }catch (e){
       pushErrs.inc()
